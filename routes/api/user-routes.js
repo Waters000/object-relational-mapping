@@ -56,7 +56,34 @@ router.post('/', (req, res) => {
 });
 
 
-// PUT /api/users/1
+router.post('/login', (req, res) => {
+  // expects {email: 'lernantino@gmail.com', password: 'password1234'}
+    User.findOne({
+      where: {
+        email: req.body.email
+      }
+    }).then(dbUserData => {
+      if (!dbUserData) {
+        res.status(400).json({ message: 'No user with that email address!' });
+        return;
+      }
+      // add comment syntax in front of this line in the .then()
+      // res.json({ user: dbUserData });
+  
+      // Verify user
+      const validPassword = dbUserData.checkPassword(req.body.password);
+  
+      if (!validPassword) {
+        res.status(400).json({ message: 'Incorrect password!' });
+        return;
+      }
+      
+      res.json({ user: dbUserData, message: 'You are now logged in!' });
+    });  
+  });
+
+
+// PUT UPdate /api/users/1
 ///  use req.body to provide the new data, req.params.id to indicate id where to put data
 router.put('/:id', (req, res) => {
     // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
@@ -64,6 +91,7 @@ router.put('/:id', (req, res) => {
     // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
     // update method same as UPDATE users SET username = "name", email = "afdsf@gmail.com", password = "new password" WHERE id = 1;
     User.update(req.body, {
+      individualHooks: true,
       where: {
         id: req.params.id
       }
